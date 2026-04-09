@@ -56,7 +56,7 @@ class SblamURI
 	function getRev()
 	{
 		$ip = $this->getIP();
-		assert('preg_match("!^\d+\.\d+\.\d+\.\d+$!",$ip)');
+		assert(preg_match("!^\d+\.\d+\.\d+\.\d+$!",$ip));
 		$res = self::gethostbyaddr($ip);
 		if ($res) return $res;
 		return NULL;
@@ -143,7 +143,7 @@ class SblamURI
 			return self::$lookupcache[$ip] = $res;
 		}
 
-		assert('preg_match("!^\d+\.\d+\.\d+\.\d+$!",$ip)');
+		assert(preg_match("!^\d+\.\d+\.\d+\.\d+$!",$ip));
 		warn("Slow lookup of $ip");
 		$res = gethostbyaddr($ip);
 		if ($res === $ip || false === strpos($res,'.') || strlen($res)<4) $res = false;
