@@ -8,7 +8,7 @@ class ServerException extends Exception {}
 
 class Account
 {
-    static function fromApiKeyHash(PDO $db, $keyhash)
+    public static function fromApiKeyHash(PDO $db, string $keyhash): self
 	{
 		$keyhash = strtolower((string)$keyhash);
 		if (!preg_match('/^[a-f0-9]{64}$/', $keyhash))
@@ -43,7 +43,7 @@ class Account
 		$this->apikey = isset($fields['apikey']) ? (string)$fields['apikey'] : '';
 	}
 
-	function isDefaultAccount()
+	public function isDefaultAccount(): bool
 	{
 		return $this->apikey == 'default';
 	}
@@ -53,14 +53,14 @@ class ServerRequest
 {
 	private $db, $account, $data, $ips, $stored_id = 1;
 
-	function __construct(PDO $db, $datasourcepath = 'php://input')
+	public function __construct(PDO $db, string $datasourcepath = 'php://input')
 	{
 		$this->db = $db;
 		$this->data = $this->convertToArray($this->decodeData(file_get_contents($datasourcepath)));
 		$this->normalizeData();
 	}
 
-	private function decodeData($data)
+	private function decodeData(string $data): string
 	{
 		$content_type = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : @$_SERVER['HTTP_CONTENT_TYPE'];
 		if (!preg_match('!^application/x-sblam\s*;\s*sig\s*=\s*([a-f0-9]{64})([a-f0-9]{64})(\s*;\s*compress\s*=\s*gzip)?\s*$!i', $content_type, $res))
@@ -84,7 +84,7 @@ class ServerRequest
         return $data;
 	}
 
-	private function convertToArray($dat)
+	private function convertToArray(string $dat): array
 	{
 		if (!function_exists('mb_convert_encoding') || !($conv = mb_convert_encoding($dat,"UTF-8","UTF-8,ISO-8859-2,Windows-1252")))
 		{
@@ -115,7 +115,7 @@ class ServerRequest
 		return $fields;
 	}
 
-	private function normalizeData()
+	private function normalizeData(): void
 	{
 		if (!isset($this->data['HTTP_HOST'])) $this->data['HTTP_HOST'] = $this->data['host'];
 		$this->data['REMOTE_ADDR'] = $this->data['ip'];
@@ -125,7 +125,7 @@ class ServerRequest
 	}
 
 	// PHP's filter_var doesn't support all ranges
-    private static function isPrivateOrReservedIP($ip_str)
+    private static function isPrivateOrReservedIP(string $ip_str): bool
     {
         static $ranges = array(
             array('0.0.0.0', 8),
@@ -158,7 +158,7 @@ class ServerRequest
 		@param headers $_SERVER array
 		@return array
 	*/
-	static function getRequestIPs($headers = NULL, $routable = true)
+	public static function getRequestIPs(?array $headers = NULL, bool $routable = true): array
 	{
 		if (NULL === $headers) $headers = $_SERVER;
 		if (!isset($headers['REMOTE_ADDR'])) $headers['REMOTE_ADDR'] = $_SERVER['REMOTE_ADDR'];
@@ -206,19 +206,19 @@ class ServerRequest
 		return array_keys($out);
 	}
 
-	function &getData()
+	public function &getData(): array
 	{
 		return $this->data;
 	}
 
-	function getIPs()
+	public function getIPs(): array
 	{
 	    return $this->ips;
     }
 
-	function isDefaultAccount() {return $this->account->isDefaultAccount();}
+	public function isDefaultAccount(): bool {return $this->account->isDefaultAccount();}
 
-    function customizeConfig(array $config)
+    public function customizeConfig(array $config): array
     {
         return $config;
     }
@@ -227,7 +227,7 @@ class ServerRequest
      * sends response to the browser, flushes and ends HTTP output
      * @param $res -2 to 2, as per public documentatio
      */
-	function returnResult($res)
+	public function returnResult(int $res): void
 	{
 		$n = $res.':'.$this->stored_id.':'.hash('sha256', $this->account->apikey . $res . $this->data['salt'])."\n";
 		header("HTTP/1.0 200 res");
@@ -240,7 +240,7 @@ class ServerRequest
 		}
 	}
 
-	private function insertArray($table,array $out, $maxtime=20)
+	private function insertArray(string $table, array $out, int $maxtime = 20): ?bool
 	{
 	    $q = "/*maxtime=$maxtime*/INSERT into $table (".implode(',',array_keys($out)).") values(?".str_repeat(",?",count($out)-1).")";
 	    $pre = $this->db->prepare($q);
@@ -248,12 +248,12 @@ class ServerRequest
 		return $pre->execute(array_values($out));
     }
 
-	function getStoredId()
+	public function getStoredId(): int
 	{
-	    return $this->stored_id;
+	    return (int)$this->stored_id;
     }
 
-	function storeData(SblamPost $sblampost)
+	public function storeData(SblamPost $sblampost): bool
 	{
 		$heads = '';
 		foreach($this->data as $n => $h)
@@ -276,7 +276,7 @@ class ServerRequest
     			'serverid'=>$sblampost->getInstallId(),
     		);
 		    $this->insertArray('posts_meta',$out,10);
-            $this->stored_id = $this->db->lastInsertId('posts_meta_id_seq');
+            $this->stored_id = (int)$this->db->lastInsertId('posts_meta_id_seq');
             assert($this->stored_id > 0);
 
 		    $out = array(
@@ -306,7 +306,7 @@ class ServerRequest
         }
 	}
 
-	function storeResult($score, $cert, $reason, $worktime, $added, $profilingres = NULL)
+	public function storeResult(float $score, float $cert, string $reason, float $worktime, int $added, ?string $profilingres = NULL): bool
 	{
     	$q = "/*maxtime=10*/UPDATE posts_meta set spamscore=?,spamcert=?,worktime=?,added=? where id=?";
 		$pre = $this->db->prepare($q);
@@ -326,21 +326,21 @@ class Server
 {
 	private $db, $services, $config;
 
-	function __construct(array $config, ISblamServices $services)
+	public function __construct(array $config, ISblamServices $services)
 	{
 		$this->db = $services->getDB();
 		$this->config = $config;
 		$this->services = $services;
 	}
 
-	static function getDefaultConfig($configfile = 'config.ini')
+	public static function getDefaultConfig(string $configfile = 'config.ini'): array
     {
 	$ini = @parse_ini_file($configfile,true);
 	if (!$ini) throw new Exception("Unable to read config file $configfile");
 	return $ini;
     }
 
-	function process(ServerRequest $req)
+	public function process(ServerRequest $req): void
 	{
 	    $starttime = microtime(true);
 
@@ -406,7 +406,7 @@ class Server
         $req->storeResult($score, $cert, $reason, $endtime - $starttime, empty($p->bayesadded)?0:6, isset($rawresult[3]) ? Sblam::formatProfiling($rawresult[3]) : '');
 	}
 
-	private function postFromFields(array $data, array $postdata, $content, $author, $email, $url, $ips)
+	private function postFromFields(array $data, array $postdata, ?string $content, ?string $author, ?string $email, ?string $url, array $ips): SblamPost
 	{
 		$p = new SblamPost($content, $author, $email, $url, $ips);
 		$p->setHeaders($data);
@@ -418,7 +418,7 @@ class Server
 	}
 
 	/** find which fields contain msg/author/e-mail */
-	private function findFields(array &$postdata, array $fs)
+	private function findFields(array &$postdata, array $fs): array
 	{
 		/* @todo if any field name is given, stop guessing! and change this list of prefixes to regexp */
 		$prefix = array('','comment_','post_','comment','osly','wp_','d_','shout_','n_','f_');
@@ -466,7 +466,7 @@ class Server
 		return array($content, $author, $email, $url);
 	}
 
-	private function findField(array &$postdata, array $names, array $prefixes)
+	private function findField(array &$postdata, array $names, array $prefixes): ?string
 	{
 		foreach($prefixes as $prefix)
 		{
