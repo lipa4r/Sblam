@@ -11,8 +11,8 @@ class SblamBasePost extends SblamPost
 	protected $spam_score = array();
 	function setSpamScore(array $s)
 	{
-	    assert('is_numeric($s[0])');
-	    assert('is_numeric($s[1]) && $s[1]>=0');
+	    assert(is_numeric($s[0]));
+	    assert(is_numeric($s[1]) && $s[1] >= 0);
 	    $this->spam_score = $s;
 	}
 
