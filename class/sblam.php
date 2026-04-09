@@ -19,7 +19,7 @@ class Sblam implements ISblam
 	protected function readConfig(array $ini)
 	{
 		if (!empty($ini['tlds'])) SblamURI::init($ini['tlds'], $this->services->getDB()); else warn('tlds not given!');
-		if (!empty($ini['dns'])) AsyncDNS::init(preg_split('![\s,]+!',$ini['dns'],NULL,PREG_SPLIT_NO_EMPTY)); else warn('dns not given!');
+		if (!empty($ini['dns'])) AsyncDNS::init(preg_split('![\s,]+!',$ini['dns'],-1,PREG_SPLIT_NO_EMPTY)); else warn('dns not given!');
 
 		foreach($ini as $name => $settings)
 		{
@@ -204,6 +204,6 @@ class Sblam implements ISblam
 	*/
 	static function getInstallationID()
 	{
-		return @md5(ini_get('extension_dir') . phpversion() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_SOFTWARE'] . __FILE__);
+		return @hash('sha256', ini_get('extension_dir') . phpversion() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_SOFTWARE'] . __FILE__);
 	}
 }

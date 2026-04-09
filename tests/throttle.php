@@ -8,7 +8,7 @@ class ThrottleAccumulator
 	{
 		if (!$key || strlen($key)<4) return;
 
-		if (strlen($key)>30) $key = 'h!'.md5($key);
+		if (strlen($key)>30) $key = 'h!'.hash('sha256', $key);
 
 		$key = $label.':'.$key;
 
