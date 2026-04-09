@@ -102,13 +102,13 @@ class SblamBase
 	{
 		d($r,'creating new post from row');
 
-		assert('!empty($r["id"])');
-		assert('!empty($r["headers"])');
-		assert('!empty($r["path"])');
-		assert('!empty($r["timestamp"])');
-		assert('array_key_exists("name",$r)');
-		assert('isset($r["content"])');
-		assert('isset($r["ip"])');
+		assert(!empty($r["id"]));
+		assert(!empty($r["headers"]));
+		assert(!empty($r["path"]));
+		assert(!empty($r["timestamp"]));
+		assert(array_key_exists("name",$r));
+		assert(isset($r["content"]));
+		assert(isset($r["ip"]));
 
 		$heads = array();
 		foreach(explode("\n",$r['headers']) as $h)
