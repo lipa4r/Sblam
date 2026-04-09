@@ -95,7 +95,22 @@ class ServerRequest
 				if ($conv === false || strlen($conv) < strlen($dat))
 				{
 					warn($conv,"A total failure, not even ISO!");
-					$conv = utf8_encode($dat);
+					if (function_exists('mb_convert_encoding'))
+					{
+						$conv = mb_convert_encoding($dat, 'UTF-8', 'ISO-8859-1');
+					}
+					elseif (function_exists('iconv'))
+					{
+						$conv = @iconv("ISO-8859-1", "UTF-8//IGNORE", $dat);
+						if ($conv === false)
+						{
+							$conv = utf8_encode($dat);
+						}
+					}
+					else
+					{
+						$conv = utf8_encode($dat);
+					}
 				}
 				else {d($conv,"got iso converted");}
 			}
