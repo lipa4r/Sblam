@@ -4,6 +4,11 @@ require_once "class/sblampost.php";
 
 class SblamBasePost extends SblamPost
 {
+	public $manualspam = null;
+	public $worktime = 0;
+	public $account = null;
+	public $profiling = null;
+
 	protected $reason;
 	public function setSpamReason(?string $r): void {$this->reason = $r;}
 	public function getSpamReason(): ?string {return $this->reason;}
