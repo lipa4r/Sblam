@@ -26,7 +26,7 @@ CREATE TABLE "accounts" (
   "apikey" char(18) NOT NULL,
   "created" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
   "email" TEXT,
-  "apikeyhash" bytea /*16*/ NOT NULL DEFAULT '',
+  "apikeyhash" bytea /*32*/ NOT NULL DEFAULT '',
   "script" enum_n_y NOT NULL DEFAULT 'N',
   "lasthost" TEXT,
   PRIMARY KEY ("id"),
@@ -36,10 +36,11 @@ CREATE TABLE "accounts" (
 CREATE INDEX "account_apikeyhash" ON accounts(apikeyhash);
 
 CREATE LANGUAGE plpgsql;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE OR REPLACE FUNCTION account_hash() RETURNS trigger AS
 $BODY$
     BEGIN
-        NEW.apikeyhash := decode(md5( E'^&$@$2\n' || COALESCE(NEW.apikey,'') || '@@'),'hex');
+        NEW.apikeyhash := digest(E'^&$@$2\n' || COALESCE(NEW.apikey,'') || '@@', 'sha256');
         return NEW;
     END;
 $BODY$
@@ -144,7 +145,7 @@ CREATE INDEX "dnsrevcache_host" on dnsrevcache(host);
 
 DROP TABLE IF EXISTS "dupes";
 CREATE TABLE "dupes" (
-  "checksum" bytea /*16*/ NOT NULL,
+  "checksum" bytea /*32*/ NOT NULL,
   "count" INTEGER NOT NULL DEFAULT 1,
   "ip" INTEGER NOT NULL,
   "expires" INTEGER NOT NULL,

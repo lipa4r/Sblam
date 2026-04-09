@@ -30,7 +30,7 @@ class SblamTestDeDupe extends SblamTestPost
 		d($text,'normalized text');
 
 		$this->length = strlen($text);
-		$this->checksum = md5($text);
+		$this->checksum = hash('sha256', $text);
 
 		if (!$this->db->exec(sprintf("/*maxtime5*/INSERT INTO dupes (checksum,count,expires,ip) VALUES(UNHEX('%s'),1,%d,%u)
 			ON DUPLICATE KEY UPDATE count = 1 + IF(expires < %d,CEIL(count/10),count), expires = GREATEST(expires + 3600*6, %d)",

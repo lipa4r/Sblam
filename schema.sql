@@ -43,7 +43,7 @@ CREATE TABLE `accounts` (
   `apikey` char(18) NOT NULL,
   `created` datetime NOT NULL,
   `email` varchar(128) DEFAULT NULL,
-  `apikeyhash` binary(16) NOT NULL,
+  `apikeyhash` binary(32) NOT NULL,
   `script` enum('N','Y') NOT NULL,
   `lasthost` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -59,7 +59,7 @@ SET collation_connection  = utf8_general_ci  ;
 SET @saved_sql_mode       = @@sql_mode  ;
 SET sql_mode              = ''  ;
 DELIMITER ;;
-CREATE trigger hashapikey_i before insert on accounts for each row set NEW.apikeyhash = unhex(md5(concat("^&$@$2\n", COALESCE(NEW.apikey), "@@"))) ;;
+CREATE trigger hashapikey_i before insert on accounts for each row set NEW.apikeyhash = unhex(sha2(concat("^&$@$2\n", COALESCE(NEW.apikey), "@@"), 256)) ;;
 DELIMITER ;
 SET sql_mode              = @saved_sql_mode  ;
 SET character_set_client  = @saved_cs_client  ;
@@ -146,7 +146,7 @@ SET collation_connection  = @saved_col_connection  ;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `bayeswordsh_s` (
-  `wordh` binary(16) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
+  `wordh` binary(16) NOT NULL,
   `ham` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `spam` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -188,7 +188,7 @@ SET character_set_client = @saved_cs_client;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `dupes` (
-  `checksum` binary(16) NOT NULL,
+  `checksum` binary(32) NOT NULL,
   `count` mediumint(8) unsigned NOT NULL DEFAULT '1',
   `ip` int(10) unsigned NOT NULL,
   `expires` int(10) unsigned NOT NULL,
@@ -244,7 +244,7 @@ SET character_set_client = @saved_cs_client;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `linkswordsh_s` (
-  `wordh` binary(16) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
+  `wordh` binary(16) NOT NULL,
   `ham` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `spam` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -379,4 +379,3 @@ SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT ;
 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS ;
 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION ;
 SET SQL_NOTES=@OLD_SQL_NOTES ;
-

@@ -13,7 +13,7 @@ class SblamTestChallenge extends SblamTestPost
             $fieldname = 'sc'.abs(crc32($installid));
 
             $post = $p->getPost();
-            if (!empty($post[$fieldname]) && preg_match('!^([a-f0-9]{32})([a-f0-9]+;([a-f0-9]+);([\d.,]+))((?:;\d+)*)$!',$post[$fieldname],$r))
+            if (!empty($post[$fieldname]) && preg_match('!^([a-f0-9]{64})([a-f0-9]+;([a-f0-9]+);([\d.,]+))((?:;\d+)*)$!',$post[$fieldname],$r))
             {
                 return array($installid, $fieldname, $r[1], $r[2], hexdec($r[3]), explode(',',$r[4]), explode(';',$r[5]));
             }
@@ -45,7 +45,7 @@ class SblamTestChallenge extends SblamTestPost
         $score=1;
         $writetime = '?';
         $age=0;
-        if ($hash === md5($installid . $signed))
+        if ($hash === hash('sha256', $installid . $signed))
         {
             $score++;
 

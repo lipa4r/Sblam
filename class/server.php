@@ -10,7 +10,7 @@ class Account
 {
     static function fromApiKeyHash(PDO $db, $keyhash)
 	{
-		if ($keyhash == md5("^&$@$2\ndefault@@"))
+		if ($keyhash == hash('sha256',"^&$@$2\ndefault@@"))
 		{
 			return new Account(array('id'=>0,'apikey'=>'default'));
 		}
@@ -33,10 +33,8 @@ class Account
 
 	protected function __construct(array $fields)
 	{
-		foreach($fields as $k => $v)
-		{
-			$this->$k = $v;
-		}
+		$this->id = isset($fields['id']) ? (int)$fields['id'] : 0;
+		$this->apikey = isset($fields['apikey']) ? (string)$fields['apikey'] : '';
 	}
 
 	function isDefaultAccount()
@@ -59,7 +57,7 @@ class ServerRequest
 	private function decodeData($data)
 	{
 		$content_type = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : @$_SERVER['HTTP_CONTENT_TYPE'];
-		if (!preg_match('!^application/x-sblam\s*;\s*sig\s*=\s*([a-z0-9]{32})([a-z0-9]{32})(\s*;\s*compress\s*=\s*gzip)?\s*$!i', $content_type, $res))
+		if (!preg_match('!^application/x-sblam\s*;\s*sig\s*=\s*([a-z0-9]{64})([a-z0-9]{64})(\s*;\s*compress\s*=\s*gzip)?\s*$!i', $content_type, $res))
 		{
 			throw new ServerException("Niepoprawne zapytanie",400);
 		}
@@ -70,7 +68,7 @@ class ServerRequest
 
 		$this->account = Account::fromApiKeyHash($this->db,$keyhash);
 
-		if (md5($this->account->apikey . $data) !== $sig)
+		if (!hash_equals(hash('sha256', $this->account->apikey . $data), $sig))
 		{
 			throw new ServerException("Niepoprawny podpis danych lub dane uszkodzone podczas transferu",403);
 		}
@@ -225,7 +223,7 @@ class ServerRequest
      */
 	function returnResult($res)
 	{
-		$n = $res.':'.$this->stored_id.':'.md5($this->account->apikey . $res . $this->data['salt'])."\n";
+		$n = $res.':'.$this->stored_id.':'.hash('sha256', $this->account->apikey . $res . $this->data['salt'])."\n";
 		header("HTTP/1.0 200 res");
 		header("Content-length:".strlen($n));
 
@@ -273,7 +271,7 @@ class ServerRequest
     		);
 		    $this->insertArray('posts_meta',$out,10);
             $this->stored_id = $this->db->lastInsertId('posts_meta_id_seq');
-            assert('$this->stored_id > 0');
+            assert($this->stored_id > 0);
 
 		    $out = array(
 		        'id'=>$this->stored_id,
