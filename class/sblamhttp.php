@@ -50,7 +50,7 @@ class SblamHTTP implements ISblamHTTP
     {
 		$postdata = $this->method." ".$this->path." HTTP/1.0\r\n".
 		            "Host: ".$this->host."\r\n".
-                    "User-Agent: PHP/5 Sblam/1\r\n".
+                    "User-Agent: PHP/8 Sblam/1\r\n".
 				    "Connection:close\r\n";
 
 		if ($this->method === "POST")
