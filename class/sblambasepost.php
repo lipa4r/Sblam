@@ -5,11 +5,11 @@ require_once "class/sblampost.php";
 class SblamBasePost extends SblamPost
 {
 	protected $reason;
-	function setSpamReason($r) {$this->reason = $r;}
-	function getSpamReason() {return $this->reason;}
+	public function setSpamReason(?string $r): void {$this->reason = $r;}
+	public function getSpamReason(): ?string {return $this->reason;}
 
 	protected $spam_score = array();
-	function setSpamScore(array $s)
+	public function setSpamScore(array $s): void
 	{
 	    assert('is_numeric($s[0])');
 	    assert('is_numeric($s[1]) && $s[1]>=0');
@@ -19,9 +19,9 @@ class SblamBasePost extends SblamPost
 	/**
 	 * @return array(score, certainity) in scale 0-1
 	 */
-	function getSpamScore() {return $this->spam_score;}
+	public function getSpamScore(): array {return $this->spam_score;}
 
 	protected $post_id;
-	function setPostId($p) {$this->post_id = $p;}
-	function getPostId() {return $this->post_id;}
+	public function setPostId(int $p): void {$this->post_id = $p;}
+	public function getPostId(): int {return $this->post_id;}
 }
