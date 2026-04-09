@@ -10,7 +10,13 @@ class Account
 {
     static function fromApiKeyHash(PDO $db, $keyhash)
 	{
-		if ($keyhash == hash('sha256',"^&$@$2\ndefault@@"))
+		$keyhash = strtolower((string)$keyhash);
+		if (!preg_match('/^[a-f0-9]{64}$/', $keyhash))
+		{
+			throw new ServerException("Niepoprawny klucz API",403);
+		}
+
+		if (hash_equals(hash('sha256',"^&$@$2\ndefault@@"), $keyhash))
 		{
 			return new Account(array('id'=>0,'apikey'=>'default'));
 		}
@@ -57,14 +63,14 @@ class ServerRequest
 	private function decodeData($data)
 	{
 		$content_type = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : @$_SERVER['HTTP_CONTENT_TYPE'];
-		if (!preg_match('!^application/x-sblam\s*;\s*sig\s*=\s*([a-z0-9]{64})([a-z0-9]{64})(\s*;\s*compress\s*=\s*gzip)?\s*$!i', $content_type, $res))
+		if (!preg_match('!^application/x-sblam\s*;\s*sig\s*=\s*([a-f0-9]{64})([a-f0-9]{64})(\s*;\s*compress\s*=\s*gzip)?\s*$!i', $content_type, $res))
 		{
 			throw new ServerException("Niepoprawne zapytanie",400);
 		}
 
 		$compressed = !empty($res[3]);
-		$keyhash = $res[1];
-		$sig = $res[2];
+		$keyhash = strtolower($res[1]);
+		$sig = strtolower($res[2]);
 
 		$this->account = Account::fromApiKeyHash($this->db,$keyhash);
 

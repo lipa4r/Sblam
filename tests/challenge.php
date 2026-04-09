@@ -45,7 +45,7 @@ class SblamTestChallenge extends SblamTestPost
         $score=1;
         $writetime = '?';
         $age=0;
-        if ($hash === hash('sha256', $installid . $signed))
+        if (hash_equals(hash('sha256', $installid . $signed), $hash))
         {
             $score++;
 
